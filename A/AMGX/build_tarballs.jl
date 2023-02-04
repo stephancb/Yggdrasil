@@ -1,9 +1,14 @@
 using BinaryBuilder, Pkg
 
+const YGGDRASIL_DIR = "../.."
+include(joinpath(YGGDRASIL_DIR, "fancy_toys.jl"))
+include(joinpath(YGGDRASIL_DIR, "platforms", "cuda.jl"))
+
 name = "AMGX"
-version = v"2.1.0"
+version = v"2.3.0"
 sources = [
-    ArchiveSource("https://github.com/NVIDIA/AMGX/archive/v2.1.0.tar.gz", "6245112b768a1dc3486b2b3c049342e232eb6281a6021fffa8b20c11631f63cc"),
+    ArchiveSource("https://github.com/NVIDIA/AMGX/archive/v2.3.0.tar.gz",
+                  "419b3cd5bd3eb3469cbef79d64a8d19d5db88dd5cce809e49cac6fc4fc2edff1"),
     DirectorySource("./bundled")
 ]
 
@@ -47,6 +52,8 @@ make install
 rm ${libdir}/*.a ${libdir}/sublibs/*.a
 """
 
+augment_platform_block = CUDA.augment
+
 platforms = [
     Platform("x86_64", "linux"; libc="glibc", cxxstring_abi = "cxx11"),
 ]
@@ -55,9 +62,21 @@ products = [
     LibraryProduct("libamgxsh", :libamgxsh),
 ]
 
-dependencies = [
-    BuildDependency(PackageSpec(name = "CUDA_full_jll", version = "10.0")),
-    Dependency(PackageSpec(name = "CUDA_jll", version = "10.0")),
-]
+dependencies = [RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll"))]
 
-build_tarballs(ARGS, name, version, sources, script, platforms, products, dependencies)
+for cuda_version in [v"11.0"], platform in platforms
+    augmented_platform = Platform(arch(platform), os(platform); cuda=CUDA.platform(cuda_version))
+    should_build_platform(triplet(augmented_platform)) || continue
+
+    cuda_deps = [
+        BuildDependency(PackageSpec(name="CUDA_full_jll",
+                                    version=cuda_full_versions[cuda_version])),
+        RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll",
+                                      version=v"0.2"), compat="0.2"),  # avoid pulling in CUDA 12 for now.
+    ]
+
+    build_tarballs(ARGS, name, version, sources, script, [augmented_platform],
+                   products, [dependencies; cuda_deps]; lazy_artifacts=true,
+                   julia_compat="1.7", augment_platform_block,
+                   skip_audit=true, dont_dlopen=true)
+end
