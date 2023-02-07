@@ -26,6 +26,15 @@ elif [[ "${target}" != *-apple-* ]]; then
 fi
 
 cd ${WORKSPACE}/srcdir/AMGX*
+
+# Apply all our patches
+if [ -d $WORKSPACE/srcdir/patches ]; then
+for f in $WORKSPACE/srcdir/patches/*.patch; do
+    echo "Applying patch ${f}"
+    atomic_patch -p1 ${f}
+done
+fi
+
 install_license LICENSE
 
 mkdir build
@@ -39,7 +48,6 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       -DCMAKE_FIND_ROOT_PATH="${prefix}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_CXX_STANDARD=11 \
-      -DCUDA_NVCC_FLAGS_RELEASE="" \
       -DCUDA_ARCH=${CUDA_ARCHS} \
       -DCUDA_TOOLKIT_ROOT_DIR="${prefix}/cuda" \
       -DCMAKE_CUDA_COMPILER=$prefix/cuda/bin/nvcc \
