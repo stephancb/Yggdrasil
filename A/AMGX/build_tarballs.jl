@@ -1,4 +1,4 @@
-using BinaryBuilder, Pkg
+using BinaryBuilder, Pkg, BinaryBuilderBase
 
 const YGGDRASIL_DIR = "../.."
 include(joinpath(YGGDRASIL_DIR, "fancy_toys.jl"))
@@ -13,6 +13,12 @@ sources = [
 ]
 
 script = raw"""
+# check if we need to use a more recent glibc
+if [[ -f "$prefix/usr/include/sched.h" ]]; then
+    GLIBC_ARTIFACT_DIR=$(dirname $(dirname $(dirname $(realpath $prefix/usr/include/sched.h))))
+    rsync --archive ${GLIBC_ARTIFACT_DIR}/ /opt/${target}/${target}/sys-root/
+fi
+
 # nvcc writes to /tmp, which is a small tmpfs in our sandbox.
 # make it use the workspace instead
 export TMPDIR=${WORKSPACE}/tmpdir
@@ -55,7 +61,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       -DCMAKE_INSTALL_PREFIX=${prefix} \
       -DCMAKE_FIND_ROOT_PATH="${prefix}" \
       -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_CXX_STANDARD=11 \
+      -DCMAKE_CXX_STANDARD=${CXX_STANDARD} \
       -DCUDA_ARCH=${CUDA_ARCHS} \
       -DCUDA_TOOLKIT_ROOT_DIR="${prefix}/cuda" \
       -DCUDA_RUNTIME_LIBRARY=Shared \
@@ -83,6 +89,11 @@ platforms = [
     Platform("x86_64", "linux"; libc="glibc", cxxstring_abi = "cxx11"),
 ]
 
+# some platforms need a newer glibc, because the default one is too old
+glibc_platforms = filter(platforms) do p
+    libc(p) == "glibc" && proc_family(p) in ["intel", "power"]
+end
+
 products = [
     LibraryProduct("libamgxsh", :libamgxsh),
 ]
@@ -97,7 +108,7 @@ cuda_full_versions = Dict(
 cuda_archs = Dict(
     v"10.2" => "35;50;60;70",
     v"11.0" => "60;70;80",
-    v"12.0" => "60;70;80;90",
+    v"12.0" => "60;70;80",
 )
 
 # build AMGX for all supported CUDA toolkits
@@ -107,8 +118,7 @@ cuda_archs = Dict(
 # should support every CUDA 11.x version.
 #
 # if AMGX would start using specific APIs from recent CUDA versions, add those here.
-# v12.0 seems to need glibc 2.17
-for cuda_version in [v"10.2", v"11.0"], platform in platforms
+for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
     augmented_platform = Platform(arch(platform), os(platform);
                                   cuda=CUDA.platform(cuda_version))
     should_build_platform(triplet(augmented_platform)) || continue
@@ -119,15 +129,31 @@ for cuda_version in [v"10.2", v"11.0"], platform in platforms
         RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll")),
     ]
 
-    preamble = """
-    CUDA_ARCHS="$(cuda_archs[cuda_version])"
-    """
+    if cuda_version >= v"12"
+        # CUDA 12 requires glibc 2.17
+        # which isn't compatible with current Linux kernel headers,
+        # so use the next packaged version
+        push!(dependencies, BuildDependency(PackageSpec(name = "Glibc_jll", version = v"2.19");
+                    platforms=glibc_platforms),)
+        push!(dependencies, Dependency(PackageSpec(name="NVTX_jll")))
+    end
 
     if cuda_version >= v"11"
         preferred_gcc_version = v"5"
     else
         preferred_gcc_version = v"4"
     end
+
+    if cuda_version >= v"12"
+        CXX_STANDARD=14
+    else
+        CXX_STANDARD=11
+    end
+
+    preamble = """
+    CUDA_ARCHS="$(cuda_archs[cuda_version])"
+    CXX_STANDARD=$(CXX_STANDARD)
+    """
 
     build_tarballs(ARGS, name, version, sources, preamble*script, [augmented_platform],
                    products, dependencies; lazy_artifacts=true,
