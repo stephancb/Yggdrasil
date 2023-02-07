@@ -37,6 +37,9 @@ fi
 
 install_license LICENSE
 
+# CMAKE is very unhappy
+ln -s ${prefix}/cuda/lib64/libcudart.so  ${prefix}/cuda/lib64/libcudart_static.a
+
 mkdir build
 cd build
 CMAKE_POLICY_DEFAULT_CMP0021=OLD \
@@ -50,13 +53,14 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       -DCMAKE_CXX_STANDARD=11 \
       -DCUDA_ARCH=${CUDA_ARCHS} \
       -DCUDA_TOOLKIT_ROOT_DIR="${prefix}/cuda" \
+      -DCUDA_RUNTIME_LIBRARY=Shared \
       -DCMAKE_CUDA_COMPILER=$prefix/cuda/bin/nvcc \
       -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,/opt/${target}/${target}/lib64" \
       -Wno-dev \
       ..
 
-# Notes:
-# - https://github.com/NVIDIA/AMGX/issues/172#issuecomment-1124194288
+# Remove our lies
+rm ${prefix}/cuda/lib64/libcudart_static.a
 
 make -j${nproc} all
 make install
@@ -85,8 +89,8 @@ cuda_full_versions = Dict(
 
 cuda_archs = Dict(
     v"10.2" => "35;50;60;70",
-    v"11.0" => "50;60;70;80;90",
-    v"12.0" => "50;60;70;80;90",
+    v"11.0" => "60;70;80",
+    v"12.0" => "60;70;80;90",
 )
 
 # build AMGX for all supported CUDA toolkits
