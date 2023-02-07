@@ -79,10 +79,6 @@ fi
 
 make -j${nproc} all
 make install
-
-# clean-up
-## unneeded static libraries
-rm ${libdir}/*.a ${libdir}/sublibs/*.a
 """
 
 augment_platform_block = CUDA.augment
