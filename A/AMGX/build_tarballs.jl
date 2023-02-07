@@ -7,8 +7,8 @@ include(joinpath(YGGDRASIL_DIR, "platforms", "cuda.jl"))
 name = "AMGX"
 version = v"2.3.0"
 sources = [
-    ArchiveSource("https://github.com/NVIDIA/AMGX/archive/v2.3.0.tar.gz",
-                  "419b3cd5bd3eb3469cbef79d64a8d19d5db88dd5cce809e49cac6fc4fc2edff1"),
+    GitSource("https://github.com/NVIDIA/AMGX.git",
+              "32e1f44fa93af7859490a800f137e75b6513420c"),
     DirectorySource("./bundled")
 ]
 
