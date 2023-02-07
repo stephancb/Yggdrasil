@@ -123,9 +123,9 @@ for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
     """
 
     if cuda_version >= v"11"
-        preferred_gcc_version = "5"
+        preferred_gcc_version = v"5"
     else
-        preferred_gcc_version = "4"
+        preferred_gcc_version = v"4"
     end
 
     build_tarballs(ARGS, name, version, sources, preamble*script, [augmented_platform],
