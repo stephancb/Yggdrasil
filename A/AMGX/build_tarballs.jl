@@ -62,20 +62,33 @@ products = [
     LibraryProduct("libamgxsh", :libamgxsh),
 ]
 
-dependencies = [RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll"))]
+# XXX: support only specifying major/minor version (JuliaPackaging/BinaryBuilder.jl#/1212)
+cuda_full_versions = Dict(
+    v"10.2" => v"10.2.89",
+    v"11.0" => v"11.0.3",
+    v"12.0" => v"12.0.0",
+)
 
-for cuda_version in [v"11.0"], platform in platforms
-    augmented_platform = Platform(arch(platform), os(platform); cuda=CUDA.platform(cuda_version))
+# build AMGX for all supported CUDA toolkits
+#
+# the library doesn't have specific CUDA requirements, so we only build for CUDA 10.2,
+# the oldest version supported by CUDA.jl, and 11.0, which (per semantic versioning)
+# should support every CUDA 11.x version.
+#
+# if AMGX would start using specific APIs from recent CUDA versions, add those here.
+for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
+    augmented_platform = Platform(arch(platform), os(platform);
+                                  cuda=CUDA.platform(cuda_version))
     should_build_platform(triplet(augmented_platform)) || continue
 
-    cuda_deps = [
+    dependencies = [
         BuildDependency(PackageSpec(name="CUDA_full_jll",
                                     version=cuda_full_versions[cuda_version])),
         RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll")),
     ]
 
     build_tarballs(ARGS, name, version, sources, script, [augmented_platform],
-                   products, [dependencies; cuda_deps]; lazy_artifacts=true,
+                   products, dependencies; lazy_artifacts=true,
                    julia_compat="1.7", augment_platform_block,
                    skip_audit=true, dont_dlopen=true)
 end
