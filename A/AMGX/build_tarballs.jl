@@ -27,7 +27,6 @@ fi
 
 cd ${WORKSPACE}/srcdir/AMGX*
 install_license LICENSE
-atomic_patch -p1 "${WORKSPACE}/srcdir/patches/fix-regex-syntax-cmake.patch"
 
 mkdir build
 cd build
