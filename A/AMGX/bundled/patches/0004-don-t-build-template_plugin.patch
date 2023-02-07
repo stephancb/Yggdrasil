@@ -1,0 +1,19 @@
+From 7f7bf13ef05897b93b620a2f59214a3e9f8cc2df Mon Sep 17 00:00:00 2001
+From: Valentin Churavy <v.churavy@gmail.com>
+Date: Tue, 7 Feb 2023 17:29:20 -0500
+Subject: [PATCH] don't build template_plugin
+
+---
+ PluginConfig.txt | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/PluginConfig.txt b/PluginConfig.txt
+index 4ea9f5a..2af70fe 100644
+--- a/PluginConfig.txt
++++ b/PluginConfig.txt
+@@ -1,2 +1 @@
+-template_plugin
+ eigensolvers
+-- 
+2.37.2
+
