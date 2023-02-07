@@ -38,6 +38,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       -DCMAKE_INSTALL_PREFIX=${prefix} \
       -DCMAKE_FIND_ROOT_PATH="${prefix}" \
       -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_CXX_STANDARD=11 \
       -DCUDA_NVCC_FLAGS_RELEASE="" \
       -DCUDA_ARCH=${CUDA_ARCHS} \
       -DCUDA_TOOLKIT_ROOT_DIR="${prefix}/cuda" \
@@ -105,5 +106,5 @@ for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
     build_tarballs(ARGS, name, version, sources, preamble*script, [augmented_platform],
                    products, dependencies; lazy_artifacts=true,
                    julia_compat="1.7", augment_platform_block,
-                   skip_audit=true, dont_dlopen=true,  preferred_gcc_version=v"5")
+                   skip_audit=true, dont_dlopen=true)
 end
