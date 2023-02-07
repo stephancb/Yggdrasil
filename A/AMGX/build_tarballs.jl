@@ -115,8 +115,14 @@ for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
     CUDA_ARCHS="$(cuda_archs[cuda_version])"
     """
 
+    if cuda_version >= v"11"
+        preferred_gcc_version = "5"
+    else
+        preferred_gcc_version = "4"
+    end
+
     build_tarballs(ARGS, name, version, sources, preamble*script, [augmented_platform],
                    products, dependencies; lazy_artifacts=true,
                    julia_compat="1.7", augment_platform_block,
-                   skip_audit=true, dont_dlopen=true)
+                   skip_audit=true, dont_dlopen=true, preferred_gcc_version)
 end
