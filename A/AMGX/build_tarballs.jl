@@ -39,7 +39,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       -DCMAKE_FIND_ROOT_PATH="${prefix}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DCUDA_NVCC_FLAGS_RELEASE="" \
-      -DCUDA_ARCH="50;60;70;80;90" \
+      -DCUDA_ARCH=${CUDA_ARCHS} \
       -DCUDA_TOOLKIT_ROOT_DIR="${prefix}/cuda" \
       -DCMAKE_CUDA_COMPILER=$prefix/cuda/bin/nvcc \
       -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,/opt/${target}/${target}/lib64" \
@@ -74,6 +74,12 @@ cuda_full_versions = Dict(
     v"12.0" => v"12.0.0",
 )
 
+cuda_archs = Dict(
+    v"10.2" => "30;50;60;70",
+    v"11.0" => "50;60;70;80;90",
+    v"12.0" => "50;60;70;80;90",
+)
+
 # build AMGX for all supported CUDA toolkits
 #
 # the library doesn't have specific CUDA requirements, so we only build for CUDA 10.2,
@@ -92,7 +98,11 @@ for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
         RuntimeDependency(PackageSpec(name="CUDA_Runtime_jll")),
     ]
 
-    build_tarballs(ARGS, name, version, sources, script, [augmented_platform],
+    preamble = """
+    CUDA_ARCHS="$(cuda_archs[cuda_version])"
+    """
+
+    build_tarballs(ARGS, name, version, sources, preamble*script, [augmented_platform],
                    products, dependencies; lazy_artifacts=true,
                    julia_compat="1.7", augment_platform_block,
                    skip_audit=true, dont_dlopen=true)
