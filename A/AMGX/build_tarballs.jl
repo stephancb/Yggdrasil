@@ -141,15 +141,11 @@ for cuda_version in [v"10.2", v"11.0"], platform in platforms
     end
 
     if cuda_version >= v"11"
+        CXX_STANDARD=14
         preferred_gcc_version = v"5"
     else
-        preferred_gcc_version = v"4"
-    end
-
-    if cuda_version >= v"12"
-        CXX_STANDARD=14
-    else
         CXX_STANDARD=11
+        preferred_gcc_version = v"4"
     end
 
     preamble = """
