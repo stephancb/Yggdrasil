@@ -105,5 +105,5 @@ for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
     build_tarballs(ARGS, name, version, sources, preamble*script, [augmented_platform],
                    products, dependencies; lazy_artifacts=true,
                    julia_compat="1.7", augment_platform_block,
-                   skip_audit=true, dont_dlopen=true)
+                   skip_audit=true, dont_dlopen=true,  preferred_gcc_version=v"5")
 end
