@@ -4,6 +4,8 @@ const YGGDRASIL_DIR = "../.."
 include(joinpath(YGGDRASIL_DIR, "fancy_toys.jl"))
 include(joinpath(YGGDRASIL_DIR, "platforms", "cuda.jl"))
 
+# TODO: Ship nvToolsExt.h with NVTX_jll and use here instead of patching it out
+
 name = "AMGX"
 version = v"2.3.0"
 sources = [
@@ -135,7 +137,6 @@ for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
         # so use the next packaged version
         push!(dependencies, BuildDependency(PackageSpec(name = "Glibc_jll", version = v"2.19");
                     platforms=glibc_platforms),)
-        push!(dependencies, Dependency(PackageSpec(name="NVTX_jll")))
     end
 
     if cuda_version >= v"11"
