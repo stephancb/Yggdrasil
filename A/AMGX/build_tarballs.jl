@@ -38,6 +38,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       -DCMAKE_INSTALL_PREFIX=${prefix} \
       -DCMAKE_FIND_ROOT_PATH="${prefix}" \
       -DCMAKE_BUILD_TYPE=Release \
+      -DCUDA_ARCH="50 60 70 80 90" \
       -DCUDA_TOOLKIT_ROOT_DIR="${prefix}/cuda" \
       -DCMAKE_CUDA_COMPILER=$prefix/cuda/bin/nvcc \
       -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,/opt/${target}/${target}/lib64" \
