@@ -38,7 +38,12 @@ fi
 install_license LICENSE
 
 # CMAKE is very unhappy
-ln -s ${prefix}/cuda/lib64/libcudart.so  ${prefix}/cuda/lib64/libcudart_static.a
+if [ ! -f ${prefix}/cuda/lib64/libcudart_static.a ]; then
+    ln -s ${prefix}/cuda/lib64/libcudart.so  ${prefix}/cuda/lib64/libcudart_static.a
+    FAKED_CUDART_STATIC=1
+else
+    FAKED_CUDART_STATIC=0
+fi
 
 mkdir build
 cd build
@@ -60,7 +65,9 @@ cmake -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TARGET_TOOLCHAIN}" \
       ..
 
 # Remove our lies
-rm ${prefix}/cuda/lib64/libcudart_static.a
+if [[ "${FAKED_CUDART_STATIC}" = "1" ]]; then
+    rm ${prefix}/cuda/lib64/libcudart_static.a
+fi
 
 make -j${nproc} all
 make install
