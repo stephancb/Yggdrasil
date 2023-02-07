@@ -120,7 +120,8 @@ cuda_archs = Dict(
 # should support every CUDA 11.x version.
 #
 # if AMGX would start using specific APIs from recent CUDA versions, add those here.
-for cuda_version in [v"10.2", v"11.0", v"12.0"], platform in platforms
+# AMGX doesn't support v12.0 yet
+for cuda_version in [v"10.2", v"11.0"], platform in platforms
     augmented_platform = Platform(arch(platform), os(platform);
                                   cuda=CUDA.platform(cuda_version))
     should_build_platform(triplet(augmented_platform)) || continue
